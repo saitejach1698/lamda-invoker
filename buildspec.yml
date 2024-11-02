@@ -1,0 +1,14 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20 # Specify your Node.js version
+    commands:
+      - npm install  # Run npm install to install dependencies
+  build:
+    commands:
+      - echo "Build stage complete"
+artifacts:
+  files:
+    - '**/*'  # Specify the files to include in the build artifacts
