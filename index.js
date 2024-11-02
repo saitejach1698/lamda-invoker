@@ -1,45 +1,35 @@
-// Lambda 1: UUID Generator and Concat
-
-const { v4: uuidv4 } = require('uuid');
+// invoker.js
 const AWS = require('aws-sdk');
 const lambda = new AWS.Lambda();
+const uuid = require('uuid');
 
 exports.handler = async (event) => {
     try {
-        // Generate UUID
-        const uuid = uuidv4();
+        // Parse input from the HTTP POST body
+        const input = JSON.parse(event.body);
 
-        // Extract text from query params
-        const text = event.queryStringParameters && event.queryStringParameters.text;
-        if (!text) {
-            return {
-                statusCode: 400,
-                body: JSON.stringify({ error: "Missing 'text' query parameter" })
-            };
-        }
-
-        // Concatenate UUID and text
-        const message = `${uuid}-${text}`;
-
-        // Invoke Lambda Function 2 (JWT Encryptor)
+        // Invoke the second Lambda function
         const response = await lambda.invoke({
-            FunctionName: 'stc-lambdaToInvoke',  // replace with actual Lambda function name of Lambda 2
-            InvocationType: 'RequestResponse',
-            Payload: JSON.stringify({ message })
+            FunctionName: 'arn:aws:lambda:us-east-2:381492040329:function:stc-lambdaToInvoke', // Replace with actual function name or ARN
+            InvocationType: 'RequestResponse', // To get a direct response back
+            Payload: JSON.stringify(input) // Pass the input JSON to the second Lambda
         }).promise();
 
-        // Parse response from Lambda 2
-        const result = JSON.parse(response.Payload);
+        // Parse and log the response from the second Lambda
+        const responseJson = JSON.parse(response.Payload);
+
+        console.log(responseJson);
 
         return {
             statusCode: 200,
-            body: JSON.stringify({ encryptedMessage: result.encryptedMessage })
+            body: JSON.stringify(responseJson)
         };
+
     } catch (error) {
-        console.error(error);
+        console.error("Error invoking Lambda function:", error);
         return {
             statusCode: 500,
-            body: JSON.stringify({ error: 'Error generating and encrypting message' })
+            body: JSON.stringify({ error: "Failed to invoke Lambda function" })
         };
     }
 };
